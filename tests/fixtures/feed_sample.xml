@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+<title>Zazzle: wedding invitations</title>
+<link>https://www.zazzle.com/s/wedding+invitations</link>
+<item>
+  <title>Elegant Greenery Wedding Invitation</title>
+  <link>https://www.zazzle.com/elegant_greenery_wedding_invitation-256123456789012345?rf=238439349232116915</link>
+  <guid isPermaLink="false">256123456789012345</guid>
+  <pubDate>Tue, 02 Sep 2025 10:00:00 GMT</pubDate>
+  <author>somecreatorstore</author>
+  <description><![CDATA[<a href="https://www.zazzle.com/x-256123456789012345"><img src="https://rlv.zcache.com/elegant_greenery-r_abc_328.jpg" /></a><br/>Modern botanical invitation. Price: $2.61]]></description>
+  <price>$2.61</price>
+  <media:title>Elegant Greenery Wedding Invitation</media:title>
+  <media:description>Modern botanical greenery wedding invitation with elegant script.</media:description>
+  <media:thumbnail url="https://rlv.zcache.com/elegant_greenery-r_abc_152.jpg?rlvnet=1&amp;max_dim=152" />
+  <media:content url="https://rlv.zcache.com/elegant_greenery-r_abc_328.jpg?rlvnet=1&amp;max_dim=328" />
+  <media:keywords>wedding, greenery, botanical, modern</media:keywords>
+</item>
+<item>
+  <title>My Own Gold Foil Save the Date</title>
+  <link>https://www.zazzle.com/gold_foil_save_the_date-256999888777666555</link>
+  <author>ReadyCardCard</author>
+  <description><![CDATA[<img src="https://rlv.zcache.com/gold-r_def_328.jpg"/> Only $1.99]]></description>
+  <media:content url="https://rlv.zcache.com/gold-r_def_328.jpg?max_dim=328" />
+</item>
+<item>
+  <title>Broken item without id</title>
+  <link>https://www.zazzle.com/store/whatever</link>
+</item>
+</channel></rss>

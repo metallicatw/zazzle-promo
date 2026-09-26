@@ -1,0 +1,135 @@
+name: zpromo
+
+# 時序排程（UTC）：
+#   每小時 :11 分  → hourly：補排程 + 發出到時間的貼文（每平台每次最多 3 篇，實際間隔由 planner 控制）
+#   每天 05:37    → daily：自家商店同步(週一) + 分類頁 harvest + 排程 + Pinterest CSV(週一)
+#                    + 成效抓取 + 匯入銷售 + 報告 + 重建 GitHub Pages 網站
+#   每週日 04:23  → Threads token 續期（60 天到期，每週續一次最保險）
+on:
+  schedule:
+    - cron: "11 * * * *"
+    - cron: "37 5 * * *"
+    - cron: "23 4 * * 0"
+  push:
+    branches: [main]
+    paths: ["src/**", "tests/**", "config/**"]
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "command (hourly / daily / probe / status / harvest / export-pinterest ...)"
+        default: "daily"
+
+concurrency:
+  group: zpromo            # 永遠只跑一個，避免兩個 run 同時改資料庫
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  ZPROMO_KEY: ${{ secrets.ZPROMO_KEY }}
+  NOTIFY_WEBHOOK: ${{ secrets.NOTIFY_WEBHOOK }}
+  PINTEREST_APP_ID: ${{ secrets.PINTEREST_APP_ID }}
+  PINTEREST_APP_SECRET: ${{ secrets.PINTEREST_APP_SECRET }}
+  PINTEREST_REFRESH_TOKEN: ${{ secrets.PINTEREST_REFRESH_TOKEN }}
+  TUMBLR_CONSUMER_KEY: ${{ secrets.TUMBLR_CONSUMER_KEY }}
+  TUMBLR_CONSUMER_SECRET: ${{ secrets.TUMBLR_CONSUMER_SECRET }}
+  TUMBLR_TOKEN: ${{ secrets.TUMBLR_TOKEN }}
+  TUMBLR_TOKEN_SECRET: ${{ secrets.TUMBLR_TOKEN_SECRET }}
+  BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+  BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+  THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+  THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+  GH_PAT: ${{ secrets.GH_PAT }}
+  PYTHONPATH: src
+
+jobs:
+  run:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      deploy: ${{ steps.cmd.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pick command
+        id: cmd
+        run: |
+          case "${{ github.event.schedule }}" in
+            "11 * * * *") c=hourly ;;
+            "37 5 * * *") c=daily ;;
+            "23 4 * * 0") c=threads-refresh ;;
+            *) c="${{ github.event.inputs.command || 'daily' }}" ;;
+          esac
+          echo "command=$c" >> "$GITHUB_OUTPUT"
+          if [ "$c" = daily ] || [ "$c" = build-site ]; then echo "deploy=true" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+
+      - name: Restore state (encrypted sqlite on the `state` branch)
+        run: |
+          mkdir -p state
+          if git ls-remote --exit-code --heads origin state >/dev/null; then
+            git fetch --depth=1 origin state
+            git --work-tree=state checkout origin/state -- .
+            git reset -q
+          fi
+          if [ -f state/zpromo.sqlite.enc ]; then
+            python -c "from pathlib import Path;from zpromo.crypto import decrypt_file as d;d(Path('state/zpromo.sqlite.enc'),Path('state/zpromo.sqlite'))"
+          fi
+
+      - name: Run
+        run: |
+          if [ "${{ steps.cmd.outputs.command }}" = threads-refresh ] && [ -z "$THREADS_ACCESS_TOKEN" ]; then
+            echo "threads not configured, skip"; exit 0; fi
+          python -m zpromo.cli "${{ steps.cmd.outputs.command }}"
+
+      - name: Save state
+        if: always()
+        run: |
+          [ -f state/zpromo.sqlite ] || exit 0
+          python -c "from pathlib import Path;from zpromo.crypto import encrypt_file as e;e(Path('state/zpromo.sqlite'),Path('state/zpromo.sqlite.enc'))"
+          cd state
+          rm -f zpromo.sqlite
+          git init -q -b state
+          git add -A
+          git -c user.name=zpromo-bot -c user.email=zpromo-bot@users.noreply.github.com commit -qm "state $(date -u +%FT%TZ)"
+          # 單一 commit 強制覆蓋，避免 repo 無限長大
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:state
+
+      - name: Upload Pinterest CSV (CSV 模式時到 Actions 頁面下載)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pinterest-bulk-csv
+          path: state/exports/pinterest/*.csv
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Upload Pages artifact
+        if: steps.cmd.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with: { path: site }
+
+  deploy:
+    needs: run
+    if: needs.run.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: "${{ steps.d.outputs.page_url }}" }
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
+
+  test:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt pytest && pytest -q

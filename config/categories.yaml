@@ -1,0 +1,75 @@
+# ============================================================
+# 分類清單：每個分類用 Zazzle RSS 的關鍵字搜尋 (qs) + 熱門排序 抓前 N 頁
+#   key       : 內部代號（不要改，資料庫用它當主鍵）
+#   qs        : Zazzle 搜尋關鍵字（等同網站上 /c/ 分類頁或搜尋結果）
+#   dept      : 所屬大類（對應佣金表的 department）
+#   board     : Pinterest 看板名稱（沒填就用 default_board）
+#   tags      : 貼文 hashtag
+#   season    : 選填，[開始月/日, 結束月/日]；季節內權重 ×3，季節外權重 ×0.3
+#   weight    : 基礎權重（預設 1），越高越常被排入
+# 自訂：直接增刪條目即可，程式下一次 harvest 自動套用
+# ============================================================
+
+categories:
+  # ---------- Invitations & Stationery（跨推 15%；此大類自推 50%）----------
+  - {key: wedding_invitations, qs: "wedding invitations", dept: Weddings, board: "Wedding Invitations & Ideas", tags: [wedding, weddinginvitations, weddingideas], weight: 1.5}
+  - {key: save_the_dates, qs: "save the date", dept: Weddings, board: "Wedding Invitations & Ideas", tags: [savethedate, wedding, engaged]}
+  - {key: bridal_shower, qs: "bridal shower invitations", dept: Weddings, board: "Wedding Invitations & Ideas", tags: [bridalshower, wedding]}
+  - {key: birthday_invitations, qs: "birthday invitations", dept: "Invitations & Stationery", board: "Birthday Party Ideas", tags: [birthday, partyideas, invitations], weight: 1.3}
+  - {key: baby_shower, qs: "baby shower invitations", dept: "Invitations & Stationery", board: "Baby Shower Ideas", tags: [babyshower, baby, invitations], weight: 1.2}
+  - {key: graduation, qs: "graduation announcements", dept: "Invitations & Stationery", board: "Graduation Party Ideas", tags: [graduation, classof2027, gradparty], season: ["03/15", "06/30"]}
+  - {key: christmas_cards, qs: "christmas cards", dept: "Invitations & Stationery", board: "Christmas Cards & Gifts", tags: [christmascards, christmas, holidaycards], season: ["10/01", "12/20"], weight: 1.5}
+  - {key: holiday_photo_cards, qs: "holiday photo cards", dept: "Invitations & Stationery", board: "Christmas Cards & Gifts", tags: [holidaycards, photocards, christmas], season: ["10/01", "12/20"]}
+  - {key: halloween_invitations, qs: "halloween party invitations", dept: "Invitations & Stationery", board: "Halloween Party Ideas", tags: [halloween, halloweenparty, spooky], season: ["09/01", "10/31"]}
+  - {key: thank_you_cards, qs: "thank you cards", dept: "Invitations & Stationery", tags: [thankyou, stationery]}
+  - {key: business_cards, qs: "business cards", dept: "Office & School", board: "Small Business Branding", tags: [businesscards, smallbusiness, branding], weight: 1.3}
+  - {key: stickers, qs: "stickers", dept: "Invitations & Stationery", tags: [stickers, labels, packaging]}
+
+  # ---------- Home & Living ----------
+  - {key: mugs, qs: "mugs", dept: "Home & Living", board: "Custom Mugs & Drinkware", tags: [mugs, coffeemug, giftideas], weight: 1.3}
+  - {key: tumblers, qs: "tumbler", dept: "Home & Living", board: "Custom Mugs & Drinkware", tags: [tumbler, drinkware, giftideas]}
+  - {key: pillows, qs: "throw pillows", dept: "Home & Living", board: "Home Decor Finds", tags: [homedecor, throwpillows, cozyhome]}
+  - {key: blankets, qs: "fleece blanket", dept: "Home & Living", board: "Home Decor Finds", tags: [blanket, cozy, homedecor]}
+  - {key: ornaments, qs: "christmas ornaments", dept: "Home & Living", board: "Christmas Cards & Gifts", tags: [ornaments, christmasdecor, christmas], season: ["10/01", "12/20"], weight: 1.3}
+  - {key: doormats, qs: "doormat", dept: "Home & Living", board: "Home Decor Finds", tags: [doormat, porchdecor, homedecor]}
+  - {key: kitchen, qs: "cutting board", dept: "Home & Living", board: "Home Decor Finds", tags: [kitchen, cuttingboard, housewarming]}
+
+  # ---------- Wall Art ----------
+  - {key: posters, qs: "poster", dept: "Wall Art", board: "Wall Art & Prints", tags: [wallart, poster, artprint]}
+  - {key: canvas_prints, qs: "canvas print", dept: "Wall Art", board: "Wall Art & Prints", tags: [canvasart, wallart, homedecor]}
+
+  # ---------- Clothing & Shoes ----------
+  - {key: tshirts, qs: "t-shirt", dept: "Clothing & Shoes", board: "Graphic Tees & Apparel", tags: [tshirt, graphictee, apparel], weight: 1.2}
+  - {key: hoodies, qs: "hoodie", dept: "Clothing & Shoes", board: "Graphic Tees & Apparel", tags: [hoodie, sweatshirt, apparel]}
+  - {key: baby_clothes, qs: "baby bodysuit", dept: "Baby & Kids", board: "Baby Shower Ideas", tags: [babyclothes, newborn, babygift]}
+
+  # ---------- Accessories / Electronics ----------
+  - {key: tote_bags, qs: "tote bag", dept: "Accessories", board: "Bags & Accessories", tags: [totebag, bags, giftideas]}
+  - {key: phone_cases, qs: "iphone case", dept: "Electronics", board: "Phone Cases & Tech", tags: [phonecase, iphonecase, tech]}
+  - {key: keychains, qs: "keychain", dept: "Accessories", board: "Bags & Accessories", tags: [keychain, smallgifts]}
+  - {key: jewelry, qs: "necklace", dept: "Accessories", board: "Bags & Accessories", tags: [jewelry, necklace, giftforher]}
+
+  # ---------- Office & School ----------
+  - {key: notebooks, qs: "notebook", dept: "Office & School", board: "Office & School Supplies", tags: [notebook, stationery, backtoschool]}
+  - {key: planners, qs: "planner", dept: "Office & School", board: "Office & School Supplies", tags: [planner, organization, 2027planner], season: ["08/15", "01/31"]}
+  - {key: calendars, qs: "calendar 2027", dept: "Office & School", board: "Office & School Supplies", tags: [calendar, 2027, photocalendar], season: ["09/15", "01/31"]}
+  - {key: mouse_pads, qs: "mouse pad", dept: "Office & School", board: "Office & School Supplies", tags: [mousepad, desksetup]}
+
+  # ---------- Sports, Toys & Games ----------
+  - {key: puzzles, qs: "jigsaw puzzle", dept: "Sports, Toys & Games", board: "Games & Puzzles", tags: [puzzle, familygames, giftideas]}
+  - {key: playing_cards, qs: "playing cards", dept: "Sports, Toys & Games", board: "Games & Puzzles", tags: [playingcards, games]}
+
+  # ---------- Crafts & Party ----------
+  - {key: party_supplies, qs: "party supplies", dept: "Crafts & Party", board: "Birthday Party Ideas", tags: [partysupplies, partydecor]}
+  - {key: favor_tags, qs: "favor tags", dept: "Crafts & Party", tags: [favortags, partyfavors, diy]}
+
+  # ---------- 節日主題（季節內自動加權）----------
+  - {key: halloween_gifts, qs: "halloween", dept: "Gifts", board: "Halloween Party Ideas", tags: [halloween, spookyseason, halloweendecor], season: ["09/01", "10/31"], weight: 1.5}
+  - {key: thanksgiving, qs: "thanksgiving", dept: "Gifts", board: "Thanksgiving Ideas", tags: [thanksgiving, fall, friendsgiving], season: ["10/01", "11/28"]}
+  - {key: christmas_gifts, qs: "christmas gifts", dept: "Gifts", board: "Christmas Cards & Gifts", tags: [christmasgifts, giftideas, christmas], season: ["10/15", "12/22"], weight: 1.5}
+  - {key: valentines, qs: "valentines day", dept: "Gifts", board: "Valentine's Day Gifts", tags: [valentinesday, love, giftforher], season: ["01/05", "02/14"]}
+  - {key: mothers_day, qs: "mothers day gifts", dept: "Gifts", board: "Gifts for Mom", tags: [mothersday, giftsformom], season: ["04/01", "05/12"]}
+  - {key: fathers_day, qs: "fathers day gifts", dept: "Gifts", board: "Gifts for Dad", tags: [fathersday, giftsfordad], season: ["05/15", "06/21"]}
+  - {key: teacher_gifts, qs: "teacher gifts", dept: "Gifts", board: "Teacher Gifts", tags: [teachergifts, teacherappreciation], season: ["04/20", "06/15"]}
+  - {key: pet_gifts, qs: "dog lover gifts", dept: "Gifts", board: "Pet Lover Gifts", tags: [doglover, petgifts, dogmom]}
+  - {key: personalized_gifts, qs: "personalized gifts", dept: "Gifts", board: "Personalized Gifts", tags: [personalizedgifts, customgifts, giftideas], weight: 1.3}

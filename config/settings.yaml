@@ -1,0 +1,101 @@
+# ============================================================
+# Zazzle Promo — 主設定檔（所有可調參數都在這裡，不要寫死在程式裡）
+# ============================================================
+
+zazzle:
+  ambassador_id: "238439349232116915"
+  # 自家商店：這些商店的商品一律用「不帶任何參數」的連結（自推 35–50%）
+  # 帶 ?rf= 只能拿 15%，所以程式會自動剝掉所有 query string
+  own_stores: ["readycardcard", "nirvanatw"]
+  base_url: "https://www.zazzle.com"
+  feed_base: "https://feed.zazzle.com"
+  # 每個分類要掃描的「頁數」與每頁商品數（15 頁 × 60 = 前 900 名）
+  pages_per_category: 15
+  page_size: 60
+  # 熱門排序區間：0=全期, 1=今日, 7=本週, 30=本月（取本月較能反映當下熱賣）
+  sort_period: 30
+  # 在跨推連結加上 tc=<平台代碼>，讓 Zazzle 報表可區分來源平台（自家商品不會加）
+  # 先開一週小量測試，若 Zazzle 報表沒有顯示或出現異常再改成 false
+  tracking_code: true
+  request_delay_seconds: 3      # 每次抓 feed 間隔，避免對 Zazzle 造成負擔
+  harvest_pages_per_run: 40     # 每次 harvest 最多抓幾頁（分散到每天）
+  refresh_days: 14              # 同一分類頁多久重新抓一次（排名會變）
+
+# 自家商品在每日貼文中的目標比例（自推佣金 35–50%，遠高於跨推 15%）
+own_product_share: 0.25
+
+# 同一個創作者商店每天每平台最多出現幾次（避免像洗版、也讓推薦多元）
+max_per_store_per_day: 2
+
+# 同一商品在同一平台再次推薦的最短間隔（天）
+repost_cooldown_days: 90
+
+# ------------------------------------------------------------
+# 平台設定：enabled / 每日上限（依帳號「暖身週數」逐步放大）/ 最短間隔 / 發文時段
+# 時段用 UTC 小時（美國東岸 = UTC-4/-5；台灣 = UTC+8）
+# ------------------------------------------------------------
+platforms:
+  pinterest:
+    enabled: true
+    # mode: api  = 已取得 Standard access，直接 API 發 Pin
+    #       csv  = 尚未通過審核，產生官方「批次建立 Pin」CSV（每檔 ≤200 筆）手動上傳
+    mode: csv
+    code: pin
+    start_date: "2026-09-28"    # 自動化開始日（用來計算暖身週數）
+    ramp:                       # [從第幾週開始, 每日上限]
+      - [1, 8]
+      - [3, 12]
+      - [5, 18]
+      - [9, 25]
+    min_gap_minutes: 40
+    # 美東 晚上 8–11 點 ≈ UTC 00–03；美東 午後 2–4 點 ≈ UTC 18–20；週末全天
+    windows_utc: [[0, 4], [13, 16], [18, 21]]
+    # 看板對應：分類 key 的 board 欄位若有填就用它，否則用 default_board
+    default_board: "Zazzle Gift Finds"
+    csv_export_weekday: 0       # CSV 模式：每週一產生下週 8 天份的批次上傳檔
+  tumblr:
+    enabled: true
+    code: tb
+    blog: "kanavrin"            # 你的 Tumblr blog 名稱（xxx.tumblr.com 的 xxx），請改成自己的
+    start_date: "2026-09-28"
+    ramp: [[1, 6], [3, 10], [6, 15]]
+    min_gap_minutes: 60
+    windows_utc: [[1, 5], [14, 18], [20, 23]]
+  bluesky:
+    enabled: true
+    code: bs
+    handle: "kanavrin.bsky.social"
+    start_date: "2026-09-28"
+    ramp: [[1, 3], [3, 5], [6, 8]]
+    min_gap_minutes: 120
+    windows_utc: [[0, 4], [13, 17], [21, 23]]
+  threads:
+    enabled: true
+    code: th
+    start_date: "2026-09-28"
+    ramp: [[1, 3], [3, 5], [6, 7]]
+    min_gap_minutes: 150
+    windows_utc: [[0, 4], [12, 16], [22, 24]]
+  site:
+    enabled: true
+    code: site
+    # GitHub Pages 網址（部署後填入）；Pinterest CSV 模式需要公開的圖片網址
+    public_url: "https://YOUR_GITHUB_NAME.github.io/zazzle-promo"
+    title: "Kanavrin's Zazzle Gift Finds"
+
+# 共用文案
+copy:
+  disclosure: "#ad · affiliate link"
+  hashtags_max: 5
+  cta: ["Customize it on Zazzle", "Make it yours", "Personalize this design", "Shop this design"]
+
+# 監控 / 通知（選用）：Discord 或 Slack webhook，secret 名稱 NOTIFY_WEBHOOK
+notify:
+  on_error: true
+  daily_summary: true
+
+# 隱私：repo 建議設為 public（Actions 分鐘數無上限、Pages 免費），
+# 因此公開的網站 / Actions 日誌預設「不顯示金額」，完整金額只送到你的私人 webhook。
+# 狀態資料庫與 Zazzle 銷售 CSV 都以 ZPROMO_KEY 加密後才存入 repo。
+privacy:
+  public_money: false
