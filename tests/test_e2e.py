@@ -55,6 +55,7 @@ def world(tmp_path, monkeypatch):
     S["zazzle"]["harvest_pages_per_run"] = 1000
     today = utcnow().date()
     for k in ("pinterest", "tumblr", "bluesky", "threads"):
+        S["platforms"][k]["enabled"] = True  # independent of the user's config
         S["platforms"][k]["start_date"] = (today - timedelta(days=30)).isoformat()
         S["platforms"][k]["windows_utc"] = [[0, 24]]
     monkeypatch.setattr(P, "get", lambda name, s: FakePlatform(name))

@@ -107,6 +107,8 @@ def _seed(con, cats, n_per_cat=100, n_stores=30, own=10):
 @pytest.fixture
 def env(tmp_path, monkeypatch):
     S, C = load_settings(), load_categories()
+    for k in ("pinterest", "tumblr", "bluesky", "threads"):  # tests must not depend on the user's enabled flags
+        S["platforms"][k]["enabled"] = True
     con = connect(tmp_path / "t.sqlite")
     _seed(con, C)
     return con, S, C
