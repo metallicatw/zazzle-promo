@@ -79,10 +79,10 @@ def run_posts(con, settings: dict, cats: list[Category], per_run: int = 3) -> di
 
 def export_pinterest_csv(con, settings: dict, cats: list[Category], out_dir) -> list:
     """CSV mode: every scheduled Pinterest post in the next 7 days → official bulk-upload CSV."""
-    from .platforms.pinterest import export_csv
+    from .boards import board_name, board_specs, cover_suggestions
+    from .platforms.pinterest import export_boards_csv, export_csv
     catmap = {c.key: c for c in cats}
-    pcfg = settings["platforms"]["pinterest"]
-    rows, ids = [], []
+    rows, ids, titles, used = [], [], set(), set()
     horizon = iso(utcnow() + timedelta(days=8))
     for post in con.execute("""SELECT * FROM posts WHERE platform='pinterest' AND status='scheduled'
                                AND scheduled_at<=? ORDER BY scheduled_at""", (horizon,)):
@@ -92,10 +92,16 @@ def export_pinterest_csv(con, settings: dict, cats: list[Category], out_dir) -> 
         floor = utcnow() + timedelta(hours=1, minutes=45 * len(rows))
         if when < floor:  # never hand Pinterest a publish date in the past
             when = floor
+        title = copy["title"]
+        if title.lower() in titles:  # Pinterest rejects duplicate titles inside one upload
+            title = (title[:80] + f" – {product.get('store') or product['product_id'][-6:]}")[:100]
+        titles.add(title.lower())
+        board = board_name(cat, settings)
+        used.add(board)
         rows.append({
-            "Title": copy["title"],
+            "Title": title,
             "Media URL": product["image_url"],
-            "Pinterest board": cat.board or pcfg.get("default_board"),
+            "Pinterest board": board,
             "Thumbnail": "",
             "Description": copy["description"],
             "Link": post["link"],
@@ -105,7 +111,10 @@ def export_pinterest_csv(con, settings: dict, cats: list[Category], out_dir) -> 
         ids.append(post["id"])
     if not rows:
         return []
-    files = export_csv(rows, out_dir, utcnow().strftime("%Y%m%d"))
+    stamp = utcnow().strftime("%Y%m%d")
+    files = export_csv(rows, out_dir, stamp)
+    specs = board_specs(cats, settings)
+    files.insert(0, export_boards_csv(specs, cover_suggestions(con, specs), used, out_dir, stamp))
     con.executemany("UPDATE posts SET status='exported', posted_at=scheduled_at WHERE id=?", [(i,) for i in ids])
     con.commit()
     return files

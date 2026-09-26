@@ -60,11 +60,16 @@ Pinterest 新 App 只有 **Trial access**，此時建立的 Pin「只有自己�
 **Standard access**（My apps → Upgrade，需要上傳一段示範 OAuth 登入與發 Pin 流程的影片）。
 在核准之前，設定 `pinterest.mode: csv`（預設值）：
 
-- 每週一 daily 會產生 `pinterest_bulk_*.csv`（每檔 ≤200 筆，含排定的發佈時間）
+- 每週一 daily 會產生 `pinterest_bulk_*.csv`（每檔 ≤100 筆，含排定的發佈時間，14 天內）
+  以及 `pinterest_boards_*.csv`（這批 Pin 用到的看板：名稱／SEO 描述／關鍵字／建議封面圖）
 - 到 Actions 該次執行頁面下載 artifact **pinterest-bulk-csv**
-- Pinterest → 建立 → **大量建立 Pin** → 上傳 CSV，Pinterest 會依 Publish date 自動分時發佈
+- **Pinterest 的大量上傳不會自動建立看板**：先照 boards CSV 把還沒有的看板建好（名稱要一字不差）
+- Pinterest → 建立 → **大量建立 Pin** → 上傳 bulk CSV，Pinterest 會依 Publish date 自動分時發佈
+- 想一次拿到全部 23 個看板的清單：Actions → Run workflow → command 填 `pinterest-boards`
 
-核准 Standard 後改成 `mode: api` 就全自動（會產生 1000×1500 直式 Pin 圖）。
+核准 Standard 後改成 `mode: api` 就全自動：程式會自動建立缺少的看板（名稱＋描述，公開），
+並產生 1000×1500 直式 Pin 圖。Pinterest API 沒有「看板封面」欄位，封面預設取看板內的 Pin，
+要指定封面請在 Pinterest App 看板 → 編輯 → 變更封面，選 boards CSV 建議的那張。
 
 ## 三、時序排程
 

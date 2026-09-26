@@ -110,9 +110,15 @@ def test_pinterest_csv_export(world):
     S["platforms"]["pinterest"]["mode"] = "csv"
     planner.plan(con, S, C)
     files = publisher.export_pinterest_csv(con, S, C, tmp / "exp")
-    assert files
-    rows = list(csv.DictReader(open(files[0], encoding="utf-8")))
-    assert len(rows) <= 200
+    assert files[0].name.startswith("pinterest_boards_")
+    boards = list(csv.DictReader(open(files[0], encoding="utf-8-sig")))
+    assert boards and all(b["Description"] and len(b["Description"]) <= 500 for b in boards)
+    assert all(b["Suggested cover image"] for b in boards)
+    rows = [r for f in files[1:] for r in csv.DictReader(open(f, encoding="utf-8"))]
+    assert all(len(list(csv.DictReader(open(f, encoding="utf-8")))) <= 100 for f in files[1:])
+    assert {r["Pinterest board"] for r in rows} <= {b["Board name"] for b in boards}
+    titles = [r["Title"].lower() for r in list(csv.DictReader(open(files[1], encoding="utf-8")))]
+    assert len(titles) == len(set(titles)), "no duplicate titles in one upload"
     assert rows[0]["Pinterest board"] and rows[0]["Link"].startswith("https://www.zazzle.com/")
     assert len(rows[0]["Description"]) <= 500
     # exported posts are not exported twice
