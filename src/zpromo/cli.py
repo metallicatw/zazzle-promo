@@ -118,6 +118,27 @@ def cmd_export_pinterest(con, S, C, a):
     return {"files": [f.name for f in files]}
 
 
+def cmd_pinterest_boards(con, S, C, a):
+    """Write the full board list (name/description/keywords/suggested cover) and, in API mode,
+    create any boards that don't exist yet."""
+    from .boards import board_specs, cover_suggestions
+    from .platforms.pinterest import export_boards_csv
+    specs = board_specs(C, S)
+    f = export_boards_csv(specs, cover_suggestions(con, specs), set(specs), STATE_DIR / "exports" / "pinterest",
+                          utcnow().strftime("%Y%m%d"))
+    res = {"boards": len(specs), "file": f.name}
+    if S["platforms"]["pinterest"].get("mode") == "api":
+        from .platforms.pinterest import Pinterest
+        pin = Pinterest(S)
+        before = set(pin.boards())
+        for name, sp in specs.items():
+            pin.board_id(name, sp["description"])
+        res["created"] = sorted(set(pin.boards()) - before)
+    for name, sp in specs.items():
+        print(f"- {name}\n    {sp['description']}")
+    return res
+
+
 def cmd_metrics(con, S, C, a):
     return publisher.collect_metrics(con, S)
 
@@ -224,7 +245,7 @@ def cmd_encrypt_file(con, S, C, a):
 
 COMMANDS = {
     "probe": cmd_probe, "harvest": cmd_harvest, "plan": cmd_plan, "post": cmd_post, "hourly": cmd_hourly,
-    "daily": cmd_daily, "export-pinterest": cmd_export_pinterest, "metrics": cmd_metrics,
+    "daily": cmd_daily, "export-pinterest": cmd_export_pinterest, "pinterest-boards": cmd_pinterest_boards, "metrics": cmd_metrics,
     "import-sales": cmd_import_sales, "report": cmd_report, "build-site": cmd_build_site, "status": cmd_status,
     "threads-refresh": cmd_threads_refresh, "auth-pinterest": cmd_auth_pinterest, "auth-tumblr": cmd_auth_tumblr,
     "keygen": cmd_keygen, "encrypt-file": cmd_encrypt_file,

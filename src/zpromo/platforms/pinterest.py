@@ -27,6 +27,7 @@ class Pinterest:
     name = "pinterest"
 
     def __init__(self, settings: dict):
+        self.settings = settings
         self.cfg = settings["platforms"]["pinterest"]
         self.s = requests.Session()
         self._token = None
@@ -64,11 +65,13 @@ class Pinterest:
                     break
         return self._boards
 
-    def board_id(self, name: str) -> str:
+    def board_id(self, name: str, description: str = "") -> str:
+        """Find the board by name, or create it (name + SEO description, public).
+        Pinterest's API has no cover field: the cover defaults to a board Pin and can be changed in the app."""
         key = name.strip().lower()
         if key not in self.boards():
             data = check(self.s.post(f"{API}/boards", json={
-                "name": name, "description": f"Hand-picked {name} on Zazzle — personalizable designs.",
+                "name": name[:50], "description": (description or f"Hand-picked {name} on Zazzle.")[:500],
                 "privacy": "PUBLIC"}, timeout=30), "pinterest")
             self._boards[key] = data["id"]
         return self._boards[key]
@@ -76,7 +79,10 @@ class Pinterest:
     # ---------- publish ----------
     def publish(self, post, product, category, copy) -> tuple[str, str]:
         self.token()
-        board = self.board_id(category.board or self.cfg.get("default_board", "Zazzle Finds"))
+        from ..boards import board_name, board_specs
+        name = board_name(category, self.settings)
+        spec = board_specs([category], self.settings)[name]
+        board = self.board_id(name, spec["description"])
         img = make_pin(product["image_url"], copy["title"])
         body = {
             "board_id": board,
@@ -115,19 +121,36 @@ class Pinterest:
 
 
 # ---------- CSV bulk mode ----------
+BOARD_HEADER = ["Board name", "Description", "Keywords", "Suggested cover image", "Cover product", "Categories"]
+
+
+def export_boards_csv(specs: dict, covers: dict, used: set[str], out_dir: Path, stamp: str) -> Path:
+    """Boards referenced by this export — Pinterest's bulk upload does NOT create boards,
+    so create any missing ones (name / description / cover) before uploading the Pin CSV."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    f = out_dir / f"pinterest_boards_{stamp}.csv"
+    with open(f, "w", newline="", encoding="utf-8-sig") as fh:
+        w = csv.DictWriter(fh, fieldnames=BOARD_HEADER)
+        w.writeheader()
+        for name in sorted(used):
+            s, c = specs[name], covers.get(name, {})
+            w.writerow({"Board name": name, "Description": s["description"], "Keywords": s["keywords"],
+                        "Suggested cover image": c.get("image_url", ""), "Cover product": c.get("url", ""),
+                        "Categories": ", ".join(s["categories"])})
+    return f
 CSV_HEADER = ["Title", "Media URL", "Pinterest board", "Thumbnail", "Description", "Link",
               "Publish date", "Keywords"]
 
 
 def export_csv(rows: list[dict], out_dir: Path, stamp: str) -> list[Path]:
-    """rows: dicts with keys matching CSV_HEADER. Splits into files of ≤200 rows."""
+    """rows: dicts with keys matching CSV_HEADER. Splits into files of ≤100 rows (safe limit)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     files = []
-    for i in range(0, len(rows), 200):
-        f = out_dir / f"pinterest_bulk_{stamp}_{i // 200 + 1}.csv"
+    for i in range(0, len(rows), 100):
+        f = out_dir / f"pinterest_bulk_{stamp}_{i // 100 + 1}.csv"
         with open(f, "w", newline="", encoding="utf-8") as fh:
             w = csv.DictWriter(fh, fieldnames=CSV_HEADER)
             w.writeheader()
-            w.writerows(rows[i:i + 200])
+            w.writerows(rows[i:i + 100])
         files.append(f)
     return files

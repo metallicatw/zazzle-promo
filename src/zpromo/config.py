@@ -24,6 +24,7 @@ class Category:
     tags: list = field(default_factory=list)
     season: list[str] | None = None
     weight: float = 1.0
+    board_desc: str | None = None   # optional custom Pinterest board description
 
     def in_season(self, today: date) -> bool | None:
         """True/False if a season is defined, None if the category is evergreen."""
