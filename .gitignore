@@ -5,3 +5,4 @@ state/
 site/
 .env
 data/zazzle_reports/*.csv
+*.egg-info/
