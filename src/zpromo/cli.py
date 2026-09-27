@@ -139,6 +139,12 @@ def cmd_pinterest_boards(con, S, C, a):
     return res
 
 
+def cmd_pinterest_demo(con, S, C, a):
+    from .pinterest_demo import serve
+    serve(a.port)
+    return {}
+
+
 def cmd_metrics(con, S, C, a):
     return publisher.collect_metrics(con, S)
 
@@ -245,12 +251,12 @@ def cmd_encrypt_file(con, S, C, a):
 
 COMMANDS = {
     "probe": cmd_probe, "harvest": cmd_harvest, "plan": cmd_plan, "post": cmd_post, "hourly": cmd_hourly,
-    "daily": cmd_daily, "export-pinterest": cmd_export_pinterest, "pinterest-boards": cmd_pinterest_boards, "metrics": cmd_metrics,
+    "daily": cmd_daily, "export-pinterest": cmd_export_pinterest, "pinterest-boards": cmd_pinterest_boards, "pinterest-demo": cmd_pinterest_demo, "metrics": cmd_metrics,
     "import-sales": cmd_import_sales, "report": cmd_report, "build-site": cmd_build_site, "status": cmd_status,
     "threads-refresh": cmd_threads_refresh, "auth-pinterest": cmd_auth_pinterest, "auth-tumblr": cmd_auth_tumblr,
     "keygen": cmd_keygen, "encrypt-file": cmd_encrypt_file,
 }
-NO_RUN_LOG = {"probe", "status", "auth-pinterest", "auth-tumblr", "keygen", "encrypt-file"}
+NO_RUN_LOG = {"probe", "status", "pinterest-demo", "auth-pinterest", "auth-tumblr", "keygen", "encrypt-file"}
 
 
 def main(argv=None):
@@ -262,6 +268,7 @@ def main(argv=None):
     ap.add_argument("--code")
     ap.add_argument("--redirect")
     ap.add_argument("--path", help="file for encrypt-file")
+    ap.add_argument("--port", type=int, default=8085, help="pinterest-demo port")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     S, C = load_settings(), load_categories()

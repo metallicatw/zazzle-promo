@@ -92,6 +92,9 @@ def build(con, settings: dict, cats: list[Category], stats: dict, out: Path):
     (out / "index.html").write_text(_page(site["title"], index, "Curated best-selling Zazzle gifts, invitations and décor.",
                                           cats, None, site, 0), encoding="utf-8")
     (out / "report" / "index.html").write_text(to_html(stats), encoding="utf-8")
+    from .pinterest_demo import PRIVACY_HTML  # public privacy policy URL for app reviews
+    (out / "privacy.html").write_text(_page("Privacy policy", PRIVACY_HTML, "Privacy policy for zpromo.", cats, None, site, 0),
+                                      encoding="utf-8")
     (out / "report" / "stats.json").write_text(json.dumps(stats, ensure_ascii=False, default=str, indent=1), encoding="utf-8")
     base = site.get("public_url", "").rstrip("/")
     (out / "sitemap.xml").write_text(
